@@ -3,54 +3,417 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>tusigma ChatGPT</title>
+  <title>tusigma // Tú Console</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      background: #131314;
-      color: #e3e3e3;
+      margin: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: Consolas, "Courier New", monospace, Arial, sans-serif;
     }
-    header {
+
+    /* Thanh trên cùng */
+    .topbar {
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
       align-items: center;
-      padding: 12px 20px;
-      background: #1e1f20;
-      border-bottom: 1px solid #333;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 18px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #3fb950;
+      box-shadow: 0 0 8px #3fb950;
+    }
+
+    /* Nhóm chế độ Tú tự động / Tú pro / Tú hacker */
+    .modes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .mode-btn {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .mode-btn:hover {
+      border-color: #8b949e;
+    }
+    .mode-btn.active {
+      border-color: #58a6ff;
+      background: #1f3a5f;
+      color: #ffffff;
       font-weight: bold;
     }
-    #clear-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: #282a2c;
-      color: #e3e3e3;
-      cursor: pointer;
-      font-size: 13px;
+    .mode-btn[data-mode="hacker"].active {
+      border-color: #3fb950;
+      background: #12331b;
+      color: #7ee787;
     }
-    #clear-btn:hover { background: #37393b; }
-    #chat {
+    .mode-btn[data-mode="pro"].active {
+      border-color: #d29922;
+      background: #3b2d0d;
+      color: #f2cc60;
+    }
+
+    .new-chat-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid #388bfd;
+      background: #1f6feb;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .new-chat-btn:hover {
+      background: #388bfd;
+    }
+
+    /* Thanh trạng thái giả lập kỹ càng */
+    .telemetry {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 18px;
+      font-size: 12px;
+      color: #8b949e;
+      background: #0b0f14;
+      border-bottom: 1px solid #21262d;
+    }
+    body.hacker-ui .telemetry {
+      color: #7ee787;
+    }
+    body.pro-ui .telemetry {
+      color: #f2cc60;
+    }
+
+    /* Khung chat chính */
+    .chat-shell {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
-      max-width: 800px;
+      padding: 18px;
       width: 100%;
+      max-width: 860px;
       margin: 0 auto;
     }
     .msg {
       margin: 12px 0;
-      padding: 12px 16px;
-      border-radius: 14px;
+      padding: 12px 15px;
+      border-radius: 12px;
       line-height: 1.55;
-      word-wrap: break-word;
+      font-size: 14px;
+      word-break: break-word;
     }
-    .user {
-      background: #282a2c;
+    .msg.user {
+      background: #1f2937;
+      border: 1px solid #374151;
       margin-left: auto;
-      max-width: 75
+      max-width: 78%;
+      white-space: pre-wrap;
+    }
+    .msg.bot {
+      background: #161b22;
+      border: 1px solid #30363d;
+      max-width: 90%;
+    }
+    body.hacker-ui .msg.bot {
+      border-color: #238636;
+    }
+    body.pro-ui .msg.bot {
+      border-color: #9e6a03;
+    }
+    .msg-tag {
+      font-size: 11px;
+      color: #8b949e;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .msg.bot pre {
+      background: #090c10;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #21262d;
+    }
+    .msg.bot p { margin: 6px 0; }
+    .msg.bot p:first-child { margin-top: 0; }
+    .msg.bot p:last-child { margin-bottom: 0; }
+
+    /* Khung nhập bên dưới */
+    .input-wrap {
+      display: flex;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #161b22;
+      border-top: 1px solid #30363d;
+    }
+    .input-inner {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    #prompt {
+      flex: 1;
+      padding: 11px 15px;
+      border-radius: 10px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    #prompt:focus {
+      border-color: #58a6ff;
+    }
+    #send-btn {
+      padding: 11px 20px;
+      border-radius: 10px;
+      border: none;
+      background: #238636;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #send-btn:hover {
+      background: #2ea043;
+    }
+    #send-btn:disabled, #prompt:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>TUSIGMA // CONSOLE</span>
+    </div>
+
+    <div class="modes">
+      <button class="mode-btn active" data-mode="auto" onclick="setMode('auto')">Tú tự động</button>
+      <button class="mode-btn" data-mode="pro" onclick="setMode('pro')">Tú pro</button>
+      <button class="mode-btn" data-mode="hacker" onclick="setMode('hacker')">Tú hacker</button>
+      <button class="new-chat-btn" onclick="newChat()">Cuộc trò chuyện mới</button>
+    </div>
+  </div>
+
+  <div class="telemetry">
+    <span id="status-mode">Chế độ hiện tại: Tú tự động [AUTO-SYNC]</span>
+    <span id="status-scan">Pipeline: READY</span>
+  </div>
+
+  <div class="chat-shell" id="chat">
+    <div class="msg bot">
+      <span class="msg-tag">[TÚ TỰ ĐỘNG] • Hệ thống sẵn sàng</span>
+      <div>Chào bạn! Chọn chế độ <b>Tú tự động</b>, <b>Tú pro</b> hoặc <b>Tú hacker</b> rồi nhập câu hỏi nhé.</div>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <div class="input-inner">
+      <input id="prompt" type="text" placeholder="Nhập lệnh hoặc câu hỏi..." onkeydown="if(event.key==='Enter') sendMsg()">
+      <button id="send-btn" onclick="sendMsg()">Gửi</button>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = "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";
+
+    const MODE_META = {
+      auto: {
+        label: "Tú tự động",
+        bar: "Chế độ hiện tại: Tú tự động [AUTO-ROUTER v4.2]",
+        bodyClass: ""
+      },
+      pro: {
+        label: "Tú pro",
+        bar: "Chế độ hiện tại: Tú pro [DEEP-SYNTHESIS ENGINE]",
+        bodyClass: "pro-ui"
+      },
+      hacker: {
+        label: "Tú hacker",
+        bar: "Chế độ hiện tại: Tú hacker [ROOT-TRACE // OVERRIDE]",
+        bodyClass: "hacker-ui"
+      }
+    };
+
+    let currentMode = "auto";
+    let history = [];
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setMode(mode) {
+      if (!MODE_META[mode]) return;
+      currentMode = mode;
+      document.body.className = MODE_META[mode].bodyClass;
+
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+
+      document.getElementById("status-mode").textContent = MODE_META[mode].bar;
+      document.getElementById("status-scan").textContent = `Pipeline: ${mode.toUpperCase()}-ARMED`;
+    }
+
+    function newChat() {
+      history = [];
+      const chat = document.getElementById("chat");
+      chat.innerHTML = "";
+      addBotCard(
+        `[${MODE_META[currentMode].label.toUpperCase()}] • Cuộc trò chuyện mới`,
+        "Đã làm mới phiên trò chuyện. Bắt đầu câu hỏi mới nhé!",
+        false
+      );
+    }
+
+    function addUserCard(text) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+      div.className = "msg user";
+      div.innerText = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function addBotCard(tagText, contentText, useMarkdown = false) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+      div.className = "msg bot";
+
+      const tag = document.createElement("span");
+      tag.className = "msg-tag";
+      tag.textContent = tagText;
+
+      const body = document.createElement("div");
+      if (useMarkdown && window.marked) {
+        body.innerHTML = marked.parse(contentText);
+      } else {
+        body.innerText = contentText;
+      }
+
+      div.appendChild(tag);
+      div.appendChild(body);
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      return { card: div, tag, body };
+    }
+
+    async function runFakeAnalysis(botUI) {
+      const modeName = MODE_META[currentMode].label;
+      const steps = [
+        `[${modeName}] Đang phân tách ngữ cảnh & token đầu vào (bước 1/4)...`,
+        `[${modeName}] Đang đối chiếu ma trận logic & cấu trúc phản hồi (bước 2/4)...`,
+        `[${modeName}] Đang tối ưu đường truyền & kiểm tra tính nhất quán (bước 3/4)...`,
+        `[${modeName}] Đang tổng hợp kết quả cuối cùng từ lõi xử lý (bước 4/4)...`
+      ];
+
+      for (let i = 0; i < steps.length; i++) {
+        document.getElementById("status-scan").textContent = `Phân tích: ${steps[i]}`;
+        botUI.body.innerText = steps[i];
+        await sleep(950);
+      }
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById("prompt");
+      const btn = document.getElementById("send-btn");
+      const scanEl = document.getElementById("status-scan");
+      const text = input.value.trim();
+      if (!text) return;
+
+      addUserCard(text);
+      input.value = "";
+      input.disabled = true;
+      btn.disabled = true;
+
+      const modeName = MODE_META[currentMode].label;
+      history.push({ role: "user", content: text });
+
+      const botUI = addBotCard(
+        `[${modeName.toUpperCase()}] • Đang phân tích chuyên sâu...`,
+        "Đang khởi tạo tiến trình...",
+        false
+      );
+
+      try {
+        await runFakeAnalysis(botUI);
+        scanEl.textContent = "Đang nhận phản hồi từ máy chủ...";
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: history
+          })
+        });
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content;
+
+        if (reply) {
+          history.push({ role: "assistant", content: reply });
+          botUI.tag.textContent = `[${modeName.toUpperCase()}] • Phân tích hoàn tất`;
+          botUI.body.innerHTML = window.marked ? marked.parse(reply) : reply;
+          scanEl.textContent = "Pipeline: COMPLETED";
+        } else {
+          history.pop();
+          const errMsg = data.error?.message || JSON.stringify(data);
+          botUI.tag.textContent = `[${modeName.toUpperCase()}] • Cảnh báo hệ thống`;
+          botUI.body.innerText = "Lỗi API: " + errMsg;
+          scanEl.textContent = "Pipeline: API_ERROR";
+        }
+      } catch (err) {
+        history.pop();
+        botUI.tag.textContent = `[${modeName.toUpperCase()}] • Lỗi kết nối`;
+        botUI.body.innerText = "Lỗi mạng: " + err.message;
+        scanEl.textContent = "Pipeline: NETWORK_ERROR";
+      } finally {
+        input.disabled = false;
+        btn.disabled = false;
+        input.focus();
+        document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>
