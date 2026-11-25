@@ -271,6 +271,8 @@
   </div>
 
   <script>
+    const MODEL_ID = "meta-llama/llama-3.3-70b-instruct:free";
+
     const MODE_META = {
       auto: {
         label: "Tú tự động",
@@ -421,7 +423,7 @@
             "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: "openrouter/free",
+            model: MODEL_ID,
             messages: messages
           })
         });
