@@ -248,6 +248,7 @@
     <span style="font-size: 12px; color: #8b949e;">OpenRouter Key:</span>
     <input id="api-key-input" type="password" placeholder="Dán key OpenRouter (sk-or-v1-...) vào đây rồi bấm Lưu">
     <button onclick="saveKey()">Lưu Key</button>
+    <button onclick="clearKey()">Xóa Key</button>
   </div>
 
   <div class="telemetry">
@@ -258,7 +259,7 @@
   <div class="chat-shell" id="chat">
     <div class="msg bot">
       <span class="msg-tag">[TÚ TỰ ĐỘNG] • Hệ thống sẵn sàng</span>
-      <div>Chào bạn! Nhập câu hỏi để bắt đầu trò chuyện nhé (key đã gắn sẵn, hoặc bạn có thể đổi key khác ở ô phía trên rồi bấm Lưu Key).</div>
+      <div>Chào bạn! Dán <b>OpenRouter Key</b> vào thanh phía trên, bấm <b>Lưu Key</b> rồi nhập tin nhắn để bắt đầu.</div>
     </div>
   </div>
 
@@ -270,8 +271,6 @@
   </div>
 
   <script>
-    const DEFAULT_OR_KEY = "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";
-
     const MODE_META = {
       auto: {
         label: "Tú tự động",
@@ -294,11 +293,8 @@
     let messages = [];
 
     window.onload = () => {
-      const savedKey = localStorage.getItem("tusigma_or_key") || DEFAULT_OR_KEY;
+      const savedKey = localStorage.getItem("tusigma_or_key") || "";
       document.getElementById("api-key-input").value = savedKey;
-      if (!localStorage.getItem("tusigma_or_key")) {
-        localStorage.setItem("tusigma_or_key", DEFAULT_OR_KEY);
-      }
     };
 
     function saveKey() {
@@ -306,6 +302,12 @@
       if (!val) return alert("Bạn chưa dán Key!");
       localStorage.setItem("tusigma_or_key", val);
       alert("Đã lưu Key trên trình duyệt máy bạn!");
+    }
+
+    function clearKey() {
+      localStorage.removeItem("tusigma_or_key");
+      document.getElementById("api-key-input").value = "";
+      alert("Đã xóa Key khỏi trình duyệt!");
     }
 
     function sleep(ms) {
