@@ -17,7 +17,6 @@
       font-family: Consolas, "Courier New", monospace, Arial, sans-serif;
     }
 
-    /* Thanh trên cùng */
     .topbar {
       display: flex;
       flex-wrap: wrap;
@@ -44,7 +43,6 @@
       box-shadow: 0 0 8px #3fb950;
     }
 
-    /* Nhóm chế độ Tú tự động / Tú pro / Tú hacker */
     .modes {
       display: flex;
       flex-wrap: wrap;
@@ -62,9 +60,7 @@
       cursor: pointer;
       transition: 0.15s;
     }
-    .mode-btn:hover {
-      border-color: #8b949e;
-    }
+    .mode-btn:hover { border-color: #8b949e; }
     .mode-btn.active {
       border-color: #58a6ff;
       background: #1f3a5f;
@@ -93,11 +89,42 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .new-chat-btn:hover {
-      background: #388bfd;
-    }
+    .new-chat-btn:hover { background: #388bfd; }
 
-    /* Thanh trạng thái giả lập kỹ càng */
+    .key-bar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 18px;
+      background: #010409;
+      border-bottom: 1px solid #21262d;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .key-bar input {
+      flex: 1;
+      min-width: 220px;
+      max-width: 420px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #7ee787;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+    }
+    .key-bar button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .key-bar button:hover { background: #30363d; }
+
     .telemetry {
       display: flex;
       justify-content: space-between;
@@ -108,14 +135,9 @@
       background: #0b0f14;
       border-bottom: 1px solid #21262d;
     }
-    body.hacker-ui .telemetry {
-      color: #7ee787;
-    }
-    body.pro-ui .telemetry {
-      color: #f2cc60;
-    }
+    body.hacker-ui .telemetry { color: #7ee787; }
+    body.pro-ui .telemetry { color: #f2cc60; }
 
-    /* Khung chat chính */
     .chat-shell {
       flex: 1;
       overflow-y: auto;
@@ -144,12 +166,8 @@
       border: 1px solid #30363d;
       max-width: 90%;
     }
-    body.hacker-ui .msg.bot {
-      border-color: #238636;
-    }
-    body.pro-ui .msg.bot {
-      border-color: #9e6a03;
-    }
+    body.hacker-ui .msg.bot { border-color: #238636; }
+    body.pro-ui .msg.bot { border-color: #9e6a03; }
     .msg-tag {
       font-size: 11px;
       color: #8b949e;
@@ -167,7 +185,6 @@
     .msg.bot p:first-child { margin-top: 0; }
     .msg.bot p:last-child { margin-bottom: 0; }
 
-    /* Khung nhập bên dưới */
     .input-wrap {
       display: flex;
       gap: 10px;
@@ -193,9 +210,7 @@
       font-size: 14px;
       outline: none;
     }
-    #prompt:focus {
-      border-color: #58a6ff;
-    }
+    #prompt:focus { border-color: #58a6ff; }
     #send-btn {
       padding: 11px 20px;
       border-radius: 10px;
@@ -207,9 +222,7 @@
       font-weight: bold;
       cursor: pointer;
     }
-    #send-btn:hover {
-      background: #2ea043;
-    }
+    #send-btn:hover { background: #2ea043; }
     #send-btn:disabled, #prompt:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -231,6 +244,12 @@
     </div>
   </div>
 
+  <div class="key-bar">
+    <span style="font-size: 12px; color: #8b949e;">OpenRouter Key:</span>
+    <input id="api-key-input" type="password" placeholder="Dán key OpenRouter (sk-or-v1-...) vào đây rồi bấm Lưu">
+    <button onclick="saveKey()">Lưu Key</button>
+  </div>
+
   <div class="telemetry">
     <span id="status-mode">Chế độ hiện tại: Tú tự động [AUTO-SYNC]</span>
     <span id="status-scan">Pipeline: READY</span>
@@ -239,7 +258,7 @@
   <div class="chat-shell" id="chat">
     <div class="msg bot">
       <span class="msg-tag">[TÚ TỰ ĐỘNG] • Hệ thống sẵn sàng</span>
-      <div>Chào bạn! Chọn chế độ <b>Tú tự động</b>, <b>Tú pro</b> hoặc <b>Tú hacker</b> rồi nhập câu hỏi nhé.</div>
+      <div>Chào bạn! Nhập câu hỏi để bắt đầu trò chuyện nhé (key đã gắn sẵn, hoặc bạn có thể đổi key khác ở ô phía trên rồi bấm Lưu Key).</div>
     </div>
   </div>
 
@@ -251,7 +270,7 @@
   </div>
 
   <script>
-    const API_KEY = "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";
+    const DEFAULT_OR_KEY = "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";
 
     const MODE_META = {
       auto: {
@@ -272,7 +291,22 @@
     };
 
     let currentMode = "auto";
-    let history = [];
+    let messages = [];
+
+    window.onload = () => {
+      const savedKey = localStorage.getItem("tusigma_or_key") || DEFAULT_OR_KEY;
+      document.getElementById("api-key-input").value = savedKey;
+      if (!localStorage.getItem("tusigma_or_key")) {
+        localStorage.setItem("tusigma_or_key", DEFAULT_OR_KEY);
+      }
+    };
+
+    function saveKey() {
+      const val = document.getElementById("api-key-input").value.trim();
+      if (!val) return alert("Bạn chưa dán Key!");
+      localStorage.setItem("tusigma_or_key", val);
+      alert("Đã lưu Key trên trình duyệt máy bạn!");
+    }
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
@@ -282,19 +316,16 @@
       if (!MODE_META[mode]) return;
       currentMode = mode;
       document.body.className = MODE_META[mode].bodyClass;
-
       document.querySelectorAll(".mode-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
       });
-
       document.getElementById("status-mode").textContent = MODE_META[mode].bar;
       document.getElementById("status-scan").textContent = `Pipeline: ${mode.toUpperCase()}-ARMED`;
     }
 
     function newChat() {
-      history = [];
-      const chat = document.getElementById("chat");
-      chat.innerHTML = "";
+      messages = [];
+      document.getElementById("chat").innerHTML = "";
       addBotCard(
         `[${MODE_META[currentMode].label.toUpperCase()}] • Cuộc trò chuyện mới`,
         "Đã làm mới phiên trò chuyện. Bắt đầu câu hỏi mới nhé!",
@@ -351,6 +382,12 @@
     }
 
     async function sendMsg() {
+      const apiKey = (localStorage.getItem("tusigma_or_key") || document.getElementById("api-key-input").value || "").trim();
+      if (!apiKey) {
+        alert("Vui lòng dán OpenRouter Key vào ô phía trên và bấm Lưu Key trước!");
+        return;
+      }
+
       const input = document.getElementById("prompt");
       const btn = document.getElementById("send-btn");
       const scanEl = document.getElementById("status-scan");
@@ -363,7 +400,7 @@
       btn.disabled = true;
 
       const modeName = MODE_META[currentMode].label;
-      history.push({ role: "user", content: text });
+      messages.push({ role: "user", content: text });
 
       const botUI = addBotCard(
         `[${modeName.toUpperCase()}] • Đang phân tích chuyên sâu...`,
@@ -375,15 +412,15 @@
         await runFakeAnalysis(botUI);
         scanEl.textContent = "Đang nhận phản hồi từ máy chủ...";
 
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`
+            "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: history
+            model: "openrouter/free",
+            messages: messages
           })
         });
 
@@ -391,19 +428,19 @@
         const reply = data.choices?.[0]?.message?.content;
 
         if (reply) {
-          history.push({ role: "assistant", content: reply });
+          messages.push({ role: "assistant", content: reply });
           botUI.tag.textContent = `[${modeName.toUpperCase()}] • Phân tích hoàn tất`;
           botUI.body.innerHTML = window.marked ? marked.parse(reply) : reply;
           scanEl.textContent = "Pipeline: COMPLETED";
         } else {
-          history.pop();
+          messages.pop();
           const errMsg = data.error?.message || JSON.stringify(data);
           botUI.tag.textContent = `[${modeName.toUpperCase()}] • Cảnh báo hệ thống`;
           botUI.body.innerText = "Lỗi API: " + errMsg;
           scanEl.textContent = "Pipeline: API_ERROR";
         }
       } catch (err) {
-        history.pop();
+        messages.pop();
         botUI.tag.textContent = `[${modeName.toUpperCase()}] • Lỗi kết nối`;
         botUI.body.innerText = "Lỗi mạng: " + err.message;
         scanEl.textContent = "Pipeline: NETWORK_ERROR";
