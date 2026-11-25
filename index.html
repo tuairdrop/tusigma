@@ -1,460 +1,2147 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>tusigma // Tú Console</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: Consolas, "Courier New", monospace, Arial, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="description" content="TUSIGMA // CONSOLE - AI Chat Interface">
+    <title>TUSIGMA // CONSOLE</title>
 
-    .topbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 18px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #3fb950;
-      box-shadow: 0 0 8px #3fb950;
-    }
+    <style>
+        :root {
+            --bg: #0d1117;
+            --panel: #161b22;
+            --panel-deep: #010409;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-rgb: 88, 166, 255;
+            --success: #3fb950;
+            --danger: #f85149;
+            --warning: #d29922;
+            --font: Consolas, "Courier New", monospace;
+        }
 
-    .modes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-    .mode-btn {
-      padding: 7px 12px;
-      border-radius: 8px;
-      border: 1px solid #30363d;
-      background: #21262d;
-      color: #c9d1d9;
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-    .mode-btn:hover { border-color: #8b949e; }
-    .mode-btn.active {
-      border-color: #58a6ff;
-      background: #1f3a5f;
-      color: #ffffff;
-      font-weight: bold;
-    }
-    .mode-btn[data-mode="hacker"].active {
-      border-color: #3fb950;
-      background: #12331b;
-      color: #7ee787;
-    }
-    .mode-btn[data-mode="pro"].active {
-      border-color: #d29922;
-      background: #3b2d0d;
-      color: #f2cc60;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .new-chat-btn {
-      padding: 7px 14px;
-      border-radius: 8px;
-      border: 1px solid #388bfd;
-      background: #1f6feb;
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .new-chat-btn:hover { background: #388bfd; }
+        html {
+            scroll-behavior: smooth;
+        }
 
-    .key-bar {
-      display: flex;
-      gap: 8px;
-      padding: 8px 18px;
-      background: #010409;
-      border-bottom: 1px solid #21262d;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .key-bar input {
-      flex: 1;
-      min-width: 220px;
-      max-width: 420px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #30363d;
-      background: #0d1117;
-      color: #7ee787;
-      font-family: inherit;
-      font-size: 12px;
-      outline: none;
-    }
-    .key-bar button {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid #30363d;
-      background: #21262d;
-      color: #e6edf3;
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .key-bar button:hover { background: #30363d; }
+        body {
+            min-height: 100vh;
+            padding: 24px;
+            background:
+                radial-gradient(ellipse at top, rgba(var(--accent-rgb), 0.08), transparent 45%),
+                var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+        }
 
-    .telemetry {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 7px 18px;
-      font-size: 12px;
-      color: #8b949e;
-      background: #0b0f14;
-      border-bottom: 1px solid #21262d;
-    }
-    body.hacker-ui .telemetry { color: #7ee787; }
-    body.pro-ui .telemetry { color: #f2cc60; }
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
 
-    .chat-shell {
-      flex: 1;
-      overflow-y: auto;
-      padding: 18px;
-      width: 100%;
-      max-width: 860px;
-      margin: 0 auto;
-    }
-    .msg {
-      margin: 12px 0;
-      padding: 12px 15px;
-      border-radius: 12px;
-      line-height: 1.55;
-      font-size: 14px;
-      word-break: break-word;
-    }
-    .msg.user {
-      background: #1f2937;
-      border: 1px solid #374151;
-      margin-left: auto;
-      max-width: 78%;
-      white-space: pre-wrap;
-    }
-    .msg.bot {
-      background: #161b22;
-      border: 1px solid #30363d;
-      max-width: 90%;
-    }
-    body.hacker-ui .msg.bot { border-color: #238636; }
-    body.pro-ui .msg.bot { border-color: #9e6a03; }
-    .msg-tag {
-      font-size: 11px;
-      color: #8b949e;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .msg.bot pre {
-      background: #090c10;
-      padding: 10px;
-      border-radius: 8px;
-      overflow-x: auto;
-      border: 1px solid #21262d;
-    }
-    .msg.bot p { margin: 6px 0; }
-    .msg.bot p:first-child { margin-top: 0; }
-    .msg.bot p:last-child { margin-bottom: 0; }
+        button {
+            cursor: pointer;
+        }
 
-    .input-wrap {
-      display: flex;
-      gap: 10px;
-      padding: 14px 18px;
-      background: #161b22;
-      border-top: 1px solid #30363d;
-    }
-    .input-inner {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-      max-width: 860px;
-      margin: 0 auto;
-    }
-    #prompt {
-      flex: 1;
-      padding: 11px 15px;
-      border-radius: 10px;
-      border: 1px solid #30363d;
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-    }
-    #prompt:focus { border-color: #58a6ff; }
-    #send-btn {
-      padding: 11px 20px;
-      border-radius: 10px;
-      border: none;
-      background: #238636;
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #send-btn:hover { background: #2ea043; }
-    #send-btn:disabled, #prompt:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-  </style>
+        button:disabled,
+        textarea:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            transition: border-color 0.25s ease;
+        }
+
+        /* MODE THEMES */
+
+        .app.mode-auto {
+            --accent: #58a6ff;
+            --accent-rgb: 88, 166, 255;
+        }
+
+        .app.mode-pro {
+            --accent: #bc8cff;
+            --accent-rgb: 188, 140, 255;
+        }
+
+        .app.mode-hacker {
+            --accent: #39d98a;
+            --accent-rgb: 57, 217, 138;
+        }
+
+        /* HEADER */
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 23px;
+            font-weight: bold;
+            box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.14);
+        }
+
+        .brand-name {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+
+        .brand-subtitle {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: 2px;
+        }
+
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 9px var(--success);
+        }
+
+        /* COMMON PANELS */
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .panel-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(1, 4, 9, 0.45);
+        }
+
+        .panel-title {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .panel-meta {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .panel-content {
+            padding: 15px;
+        }
+
+        /* TELEMETRY */
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .telemetry-label {
+            color: var(--muted);
+            font-size: 10px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .telemetry-value {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .progress-track {
+            height: 5px;
+            background: #010409;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.35s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .pipeline-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .pipeline-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .pipeline-dot.running {
+            background: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+            animation: blink 1s infinite;
+        }
+
+        .pipeline-dot.success {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .pipeline-dot.error {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        /* API KEY MANAGER */
+
+        .key-input-row {
+            display: flex;
+            gap: 9px;
+        }
+
+        .text-input {
+            width: 100%;
+            min-width: 0;
+            background: var(--panel-deep);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 11px 12px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.08);
+        }
+
+        .text-input::placeholder {
+            color: #58616d;
+        }
+
+        .key-input {
+            flex: 1;
+        }
+
+        .key-note {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .key-warning {
+            display: none;
+            margin-top: 10px;
+            padding: 9px 11px;
+            background: rgba(248, 81, 73, 0.08);
+            border: 1px solid rgba(248, 81, 73, 0.35);
+            border-radius: 5px;
+            color: #ff7b72;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .key-warning.visible {
+            display: block;
+        }
+
+        .key-saved {
+            display: inline-block;
+            color: var(--success);
+            font-size: 10px;
+            margin-left: 7px;
+        }
+
+        /* BUTTONS */
+
+        .btn {
+            padding: 10px 13px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: #21262d;
+            color: var(--text);
+            font-size: 11px;
+            font-weight: bold;
+            transition: 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(var(--accent-rgb), 0.07);
+        }
+
+        .btn-primary {
+            color: #fff;
+            background: rgba(var(--accent-rgb), 0.18);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            color: #fff;
+            background: rgba(var(--accent-rgb), 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            color: #ff7b72;
+            border-color: var(--danger);
+            background: rgba(248, 81, 73, 0.08);
+        }
+
+        /* MODE SELECTOR */
+
+        .mode-container {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 125px;
+            padding: 12px 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--panel-deep);
+            color: var(--muted);
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .mode-btn.active {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(var(--accent-rgb), 0.09);
+            box-shadow: inset 0 -2px 0 var(--accent);
+        }
+
+        .mode-description {
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        /* CHAT */
+
+        .chat-panel {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.035);
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-badge {
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: bold;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+
+        .chat-window {
+            height: 490px;
+            overflow-y: auto;
+            padding: 18px;
+            background:
+                linear-gradient(rgba(88, 166, 255, 0.012) 1px, transparent 1px),
+                var(--panel-deep);
+            background-size: 100% 25px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-window::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-window::-webkit-scrollbar-track {
+            background: #010409;
+        }
+
+        .chat-window::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 10px;
+        }
+
+        .welcome-screen {
+            min-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex-direction: column;
+            padding: 30px 15px;
+        }
+
+        .welcome-logo {
+            color: var(--accent);
+            font-size: 39px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(var(--accent-rgb), 0.35);
+        }
+
+        .welcome-title {
+            color: #fff;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .welcome-description {
+            max-width: 420px;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.9;
+        }
+
+        .message {
+            max-width: 88%;
+            margin-bottom: 19px;
+            animation: messageIn 0.25s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(7px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            margin-left: auto;
+        }
+
+        .message.bot,
+        .message.system {
+            margin-right: auto;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .message.user .message-meta {
+            justify-content: flex-end;
+        }
+
+        .message-role {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .message.user .message-role {
+            color: #79c0ff;
+        }
+
+        .message-body {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--panel);
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .message.user .message-body {
+            border-color: rgba(88, 166, 255, 0.25);
+            background: rgba(88, 166, 255, 0.07);
+        }
+
+        .message.bot .message-body {
+            border-left: 3px solid var(--accent);
+        }
+
+        .message.system .message-body {
+            border-color: rgba(248, 81, 73, 0.4);
+            color: #ff8b85;
+            background: rgba(248, 81, 73, 0.06);
+            font-size: 11px;
+        }
+
+        .message.processing .message-body {
+            color: var(--accent);
+            border-style: dashed;
+        }
+
+        .processing-line {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .processing-spinner {
+            width: 13px;
+            height: 13px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* MARKDOWN */
+
+        .prose {
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .prose p {
+            margin: 0 0 12px;
+        }
+
+        .prose p:last-child {
+            margin-bottom: 0;
+        }
+
+        .prose h1,
+        .prose h2,
+        .prose h3,
+        .prose h4 {
+            color: var(--accent);
+            margin: 18px 0 9px;
+            line-height: 1.4;
+        }
+
+        .prose h1 {
+            font-size: 19px;
+        }
+
+        .prose h2 {
+            font-size: 17px;
+        }
+
+        .prose h3 {
+            font-size: 15px;
+        }
+
+        .prose h4 {
+            font-size: 13px;
+        }
+
+        .prose ul,
+        .prose ol {
+            margin: 8px 0 13px 22px;
+        }
+
+        .prose li {
+            margin-bottom: 5px;
+        }
+
+        .prose blockquote {
+            padding: 9px 13px;
+            margin: 12px 0;
+            border-left: 3px solid var(--accent);
+            background: rgba(var(--accent-rgb), 0.06);
+            color: #aeb9c5;
+        }
+
+        .prose a {
+            color: #79c0ff;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .prose a:hover {
+            text-decoration: underline;
+        }
+
+        .prose strong {
+            color: #fff;
+        }
+
+        .prose hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 15px 0;
+        }
+
+        .prose pre {
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 14px;
+            margin: 12px 0;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #010409;
+            color: #c9d1d9;
+            line-height: 1.65;
+            font-size: 12px;
+        }
+
+        .prose pre code {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            white-space: pre;
+        }
+
+        .prose :not(pre) > code {
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: #010409;
+            border: 1px solid var(--border);
+            color: #79c0ff;
+            font-size: 12px;
+        }
+
+        .prose table {
+            width: 100%;
+            border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-size: 12px;
+        }
+
+        .prose th,
+        .prose td {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .prose th {
+            background: #010409;
+            color: var(--accent);
+        }
+
+        .prose img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+
+        /* COMPOSER */
+
+        .composer {
+            padding: 14px;
+            border-top: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .composer-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .composer-input {
+            flex: 1;
+            min-height: 48px;
+            max-height: 150px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .send-btn {
+            min-width: 95px;
+            height: 48px;
+        }
+
+        .composer-hint {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* FOOTER */
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: #58616d;
+            font-size: 10px;
+            padding: 5px 2px 20px;
+        }
+
+        .footer-accent {
+            color: var(--accent);
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 650px) {
+            body {
+                padding: 12px;
+            }
+
+            .brand-name {
+                font-size: 16px;
+            }
+
+            .brand-icon {
+                width: 37px;
+                height: 37px;
+            }
+
+            .telemetry-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .key-input-row {
+                flex-wrap: wrap;
+            }
+
+            .key-input {
+                flex-basis: 100%;
+            }
+
+            .key-input-row .btn {
+                flex: 1;
+            }
+
+            .mode-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .mode-btn {
+                min-width: 0;
+            }
+
+            .mode-btn:last-child {
+                grid-column: span 2;
+            }
+
+            .chat-window {
+                height: 58vh;
+                min-height: 350px;
+                padding: 12px;
+            }
+
+            .message {
+                max-width: 96%;
+            }
+
+            .composer {
+                padding: 10px;
+            }
+
+            .send-btn {
+                min-width: 76px;
+                padding: 8px;
+            }
+
+            .panel-content {
+                padding: 12px;
+            }
+
+            .header {
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="topbar">
-    <div class="brand">
-      <span class="dot"></span>
-      <span>TUSIGMA // CONSOLE</span>
-    </div>
+    <main class="app mode-auto" id="app">
 
-    <div class="modes">
-      <button class="mode-btn active" data-mode="auto" onclick="setMode('auto')">Tú tự động</button>
-      <button class="mode-btn" data-mode="pro" onclick="setMode('pro')">Tú pro</button>
-      <button class="mode-btn" data-mode="hacker" onclick="setMode('hacker')">Tú hacker</button>
-      <button class="new-chat-btn" onclick="newChat()">Cuộc trò chuyện mới</button>
-    </div>
-  </div>
+        <!-- HEADER -->
+        <header class="header">
+            <div class="brand">
+                <div class="brand-icon">T</div>
 
-  <div class="key-bar">
-    <span style="font-size: 12px; color: #8b949e;">OpenRouter Key:</span>
-    <input id="api-key-input" type="password" placeholder="Dán key OpenRouter (sk-or-v1-...) vào đây rồi bấm Lưu">
-    <button onclick="saveKey()">Lưu Key</button>
-    <button onclick="clearKey()">Xóa Key</button>
-  </div>
+                <div>
+                    <div class="brand-name">TUSIGMA // CONSOLE</div>
+                    <div class="brand-subtitle">ARTIFICIAL INTELLIGENCE TERMINAL</div>
+                </div>
+            </div>
 
-  <div class="telemetry">
-    <span id="status-mode">Chế độ hiện tại: Tú tự động [AUTO-SYNC]</span>
-    <span id="status-scan">Pipeline: READY</span>
-  </div>
+            <div class="connection-indicator">
+                <span class="connection-dot"></span>
+                <span>CLIENT ONLINE</span>
+            </div>
+        </header>
 
-  <div class="chat-shell" id="chat">
-    <div class="msg bot">
-      <span class="msg-tag">[TÚ TỰ ĐỘNG] • Hệ thống sẵn sàng</span>
-      <div>Chào bạn! Dán <b>OpenRouter Key</b> vào thanh phía trên, bấm <b>Lưu Key</b> rồi nhập tin nhắn để bắt đầu.</div>
-    </div>
-  </div>
+        <!-- TELEMETRY -->
+        <section class="panel">
+            <div class="panel-heading">
+                <span class="panel-title">SYSTEM TELEMETRY</span>
+                <span class="panel-meta">LIVE MONITOR</span>
+            </div>
 
-  <div class="input-wrap">
-    <div class="input-inner">
-      <input id="prompt" type="text" placeholder="Nhập lệnh hoặc câu hỏi..." onkeydown="if(event.key==='Enter') sendMsg()">
-      <button id="send-btn" onclick="sendMsg()">Gửi</button>
-    </div>
-  </div>
+            <div class="panel-content">
+                <div class="telemetry-grid">
+                    <div>
+                        <div class="telemetry-label">CURRENT PIPELINE</div>
 
-  <script>
-    const MODEL_ID = "meta-llama/llama-3.3-70b-instruct:free";
+                        <div class="telemetry-value pipeline-state">
+                            <span class="pipeline-dot" id="pipelineDot"></span>
+                            <span id="pipelineStatus">STANDBY</span>
+                        </div>
 
-    const MODE_META = {
-      auto: {
-        label: "Tú tự động",
-        bar: "Chế độ hiện tại: Tú tự động [AUTO-ROUTER v4.2]",
-        bodyClass: ""
-      },
-      pro: {
-        label: "Tú pro",
-        bar: "Chế độ hiện tại: Tú pro [DEEP-SYNTHESIS ENGINE]",
-        bodyClass: "pro-ui"
-      },
-      hacker: {
-        label: "Tú hacker",
-        bar: "Chế độ hiện tại: Tú hacker [ROOT-TRACE // OVERRIDE]",
-        bodyClass: "hacker-ui"
-      }
-    };
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
 
-    let currentMode = "auto";
-    let messages = [];
+                    <div>
+                        <div class="telemetry-label">ACTIVE ENGINE</div>
+                        <div class="telemetry-value" id="activeEngine">
+                            AUTO-ROUTER
+                        </div>
 
-    window.onload = () => {
-      const savedKey = localStorage.getItem("tusigma_or_key") || "";
-      document.getElementById("api-key-input").value = savedKey;
-    };
+                        <div class="telemetry-label" style="margin-top: 12px;">
+                            MODEL ID
+                        </div>
 
-    function saveKey() {
-      const val = document.getElementById("api-key-input").value.trim();
-      if (!val) return alert("Bạn chưa dán Key!");
-      localStorage.setItem("tusigma_or_key", val);
-      alert("Đã lưu Key trên trình duyệt máy bạn!");
-    }
+                        <div class="telemetry-value" id="modelDisplay">
+                            meta-llama/llama-3.3-70b-instruct:free
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    function clearKey() {
-      localStorage.removeItem("tusigma_or_key");
-      document.getElementById("api-key-input").value = "";
-      alert("Đã xóa Key khỏi trình duyệt!");
-    }
+        <!-- API KEY MANAGER -->
+        <section class="panel">
+            <div class="panel-heading">
+                <span class="panel-title">01 // API KEY MANAGEMENT</span>
+                <span class="panel-meta" id="keyStatus">NO KEY STATUS</span>
+            </div>
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+            <div class="panel-content">
+                <div class="key-input-row">
+                    <input
+                        type="password"
+                        class="text-input key-input"
+                        id="apiKeyInput"
+                        placeholder="Nhập OpenRouter API Key..."
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="OpenRouter API Key"
+                    >
 
-    function setMode(mode) {
-      if (!MODE_META[mode]) return;
-      currentMode = mode;
-      document.body.className = MODE_META[mode].bodyClass;
-      document.querySelectorAll(".mode-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.mode === mode);
-      });
-      document.getElementById("status-mode").textContent = MODE_META[mode].bar;
-      document.getElementById("status-scan").textContent = `Pipeline: ${mode.toUpperCase()}-ARMED`;
-    }
+                    <button class="btn btn-primary" id="saveKeyBtn" type="button">
+                        LƯU KEY
+                    </button>
 
-    function newChat() {
-      messages = [];
-      document.getElementById("chat").innerHTML = "";
-      addBotCard(
-        `[${MODE_META[currentMode].label.toUpperCase()}] • Cuộc trò chuyện mới`,
-        "Đã làm mới phiên trò chuyện. Bắt đầu câu hỏi mới nhé!",
-        false
-      );
-    }
+                    <button class="btn btn-danger" id="deleteKeyBtn" type="button">
+                        XÓA KEY
+                    </button>
+                </div>
 
-    function addUserCard(text) {
-      const chat = document.getElementById("chat");
-      const div = document.createElement("div");
-      div.className = "msg user";
-      div.innerText = text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
+                <div class="key-note">
+                    KEY được lưu trong localStorage của trình duyệt hiện tại.
+                    Không chia sẻ key và không đưa key vào mã nguồn công khai.
+                    <br>
+                    API endpoint:
+                    <span class="footer-accent">
+                        https://openrouter.ai/api/v1/chat/completions
+                    </span>
+                </div>
 
-    function addBotCard(tagText, contentText, useMarkdown = false) {
-      const chat = document.getElementById("chat");
-      const div = document.createElement("div");
-      div.className = "msg bot";
+                <div class="key-warning" id="keyWarning" role="alert"></div>
+            </div>
+        </section>
 
-      const tag = document.createElement("span");
-      tag.className = "msg-tag";
-      tag.textContent = tagText;
+        <!-- MODE SELECTOR -->
+        <section class="panel">
+            <div class="panel-heading">
+                <span class="panel-title">02 // PERSONA SELECTOR</span>
+                <span class="panel-meta">SELECT AI MODE</span>
+            </div>
 
-      const body = document.createElement("div");
-      if (useMarkdown && window.marked) {
-        body.innerHTML = marked.parse(contentText);
-      } else {
-        body.innerText = contentText;
-      }
+            <div class="panel-content">
+                <div class="mode-container">
+                    <button
+                        class="mode-btn active"
+                        data-mode="auto"
+                        type="button"
+                        aria-pressed="true"
+                    >
+                        [ TÚ TỰ ĐỘNG ]
+                    </button>
 
-      div.appendChild(tag);
-      div.appendChild(body);
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-      return { card: div, tag, body };
-    }
+                    <button
+                        class="mode-btn"
+                        data-mode="pro"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        [ TÚ PRO ]
+                    </button>
 
-    async function runFakeAnalysis(botUI) {
-      const modeName = MODE_META[currentMode].label;
-      const steps = [
-        `[${modeName}] Đang phân tách ngữ cảnh & token đầu vào (bước 1/4)...`,
-        `[${modeName}] Đang đối chiếu ma trận logic & cấu trúc phản hồi (bước 2/4)...`,
-        `[${modeName}] Đang tối ưu đường truyền & kiểm tra tính nhất quán (bước 3/4)...`,
-        `[${modeName}] Đang tổng hợp kết quả cuối cùng từ lõi xử lý (bước 4/4)...`
-      ];
+                    <button
+                        class="mode-btn"
+                        data-mode="hacker"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        [ TÚ HACKER ]
+                    </button>
+                </div>
 
-      for (let i = 0; i < steps.length; i++) {
-        document.getElementById("status-scan").textContent = `Phân tích: ${steps[i]}`;
-        botUI.body.innerText = steps[i];
-        await sleep(950);
-      }
-    }
+                <div class="mode-description" id="modeDescription">
+                    AUTO-ROUTER // Tự động điều chỉnh cách trả lời theo nội
+                    dung câu hỏi, ưu tiên tính chính xác và dễ hiểu.
+                </div>
+            </div>
+        </section>
 
-    async function sendMsg() {
-      const apiKey = (localStorage.getItem("tusigma_or_key") || document.getElementById("api-key-input").value || "").trim();
-      if (!apiKey) {
-        alert("Vui lòng dán OpenRouter Key vào ô phía trên và bấm Lưu Key trước!");
-        return;
-      }
+        <!-- CHAT INTERFACE -->
+        <section class="panel chat-panel">
 
-      const input = document.getElementById("prompt");
-      const btn = document.getElementById("send-btn");
-      const scanEl = document.getElementById("status-scan");
-      const text = input.value.trim();
-      if (!text) return;
+            <div class="panel-heading">
+                <span class="panel-title">03 // NEURAL INTERFACE</span>
 
-      addUserCard(text);
-      input.value = "";
-      input.disabled = true;
-      btn.disabled = true;
+                <div class="chat-header-right">
+                    <span class="mode-badge" id="chatModeBadge">
+                        AUTO-ROUTER
+                    </span>
 
-      const modeName = MODE_META[currentMode].label;
-      messages.push({ role: "user", content: text });
+                    <button class="btn" id="newChatBtn" type="button">
+                        + CHAT MỚI
+                    </button>
+                </div>
+            </div>
 
-      const botUI = addBotCard(
-        `[${modeName.toUpperCase()}] • Đang phân tích chuyên sâu...`,
-        "Đang khởi tạo tiến trình...",
-        false
-      );
+            <div
+                class="chat-window"
+                id="chatWindow"
+                aria-live="polite"
+                aria-label="Lịch sử trò chuyện"
+            >
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">T_</div>
 
-      try {
-        await runFakeAnalysis(botUI);
-        scanEl.textContent = "Đang nhận phản hồi từ máy chủ...";
+                    <div class="welcome-title">
+                        TUSIGMA ONLINE
+                    </div>
 
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: MODEL_ID,
-            messages: messages
-          })
+                    <div class="welcome-description">
+                        Hệ thống đã khởi tạo thành công.<br>
+                        Chọn persona, cấu hình API Key và gửi câu hỏi
+                        để bắt đầu phiên hội thoại.
+                    </div>
+                </div>
+            </div>
+
+            <div class="composer">
+                <div class="composer-row">
+                    <textarea
+                        class="text-input composer-input"
+                        id="messageInput"
+                        placeholder="Nhập tin nhắn của bạn..."
+                        rows="1"
+                        aria-label="Nội dung tin nhắn"
+                    ></textarea>
+
+                    <button
+                        class="btn btn-primary send-btn"
+                        id="sendBtn"
+                        type="button"
+                    >
+                        GỬI ↗
+                    </button>
+                </div>
+
+                <div class="composer-hint">
+                    <span>ENTER: GỬI // SHIFT + ENTER: XUỐNG DÒNG</span>
+                    <span id="chatCounter">0 MESSAGES</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <span>
+                TUSIGMA <span class="footer-accent">//</span> CONSOLE
+            </span>
+
+            <span>
+                POWERED BY OPENROUTER API
+            </span>
+        </footer>
+    </main>
+
+    <!-- MARKED: MARKDOWN PARSER -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+
+    <!-- DOMPURIFY: HTML SANITIZER -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+
+    <script>
+        "use strict";
+
+        /* =====================================================
+           1. CONFIGURATION
+        ===================================================== */
+
+        const API_URL =
+            "https://openrouter.ai/api/v1/chat/completions";
+
+        // Có thể thay model tại đây.
+        // Model miễn phí thường có hậu tố :free.
+        const MODEL_ID =
+            "meta-llama/llama-3.3-70b-instruct:free";
+
+        // Chỉ lưu API Key trong localStorage của trình duyệt.
+        // Không đặt API Key thực tế trong mã nguồn.
+        const STORAGE_KEY =
+            "tusigma_openrouter_api_key_v1";
+
+        const REQUEST_TIMEOUT = 90000;
+
+        const MODES = {
+            auto: {
+                label: "AUTO-ROUTER",
+                description:
+                    "AUTO-ROUTER // Tự động điều chỉnh cách trả lời theo nội dung câu hỏi, ưu tiên tính chính xác và dễ hiểu."
+            },
+
+            pro: {
+                label: "DEEP-SYNTHESIS ENGINE",
+                description:
+                    "DEEP-SYNTHESIS ENGINE // Phân tích chuyên sâu, lập luận có cấu trúc, giải thích từng bước và chú trọng tính chính xác."
+            },
+
+            hacker: {
+                label: "ROOT-TRACE // OVERRIDE",
+                description:
+                    "ROOT-TRACE // OVERRIDE // Persona chuyên về tư duy kỹ thuật, lập trình và an ninh mạng theo hướng hợp pháp, phòng thủ."
+            }
+        };
+
+        /* =====================================================
+           2. APPLICATION STATE
+        ===================================================== */
+
+        let currentMode = "auto";
+
+        // Lịch sử hội thoại của phiên hiện tại.
+        // Không bao gồm system prompt.
+        let messages = [];
+
+        let isBusy = false;
+
+        /* =====================================================
+           3. DOM REFERENCES
+        ===================================================== */
+
+        const app = document.getElementById("app");
+
+        const apiKeyInput =
+            document.getElementById("apiKeyInput");
+
+        const saveKeyBtn =
+            document.getElementById("saveKeyBtn");
+
+        const deleteKeyBtn =
+            document.getElementById("deleteKeyBtn");
+
+        const keyStatus =
+            document.getElementById("keyStatus");
+
+        const keyWarning =
+            document.getElementById("keyWarning");
+
+        const pipelineStatus =
+            document.getElementById("pipelineStatus");
+
+        const pipelineDot =
+            document.getElementById("pipelineDot");
+
+        const progressFill =
+            document.getElementById("progressFill");
+
+        const activeEngine =
+            document.getElementById("activeEngine");
+
+        const modelDisplay =
+            document.getElementById("modelDisplay");
+
+        const modeDescription =
+            document.getElementById("modeDescription");
+
+        const chatModeBadge =
+            document.getElementById("chatModeBadge");
+
+        const chatWindow =
+            document.getElementById("chatWindow");
+
+        const welcomeScreen =
+            document.getElementById("welcomeScreen");
+
+        const messageInput =
+            document.getElementById("messageInput");
+
+        const sendBtn =
+            document.getElementById("sendBtn");
+
+        const newChatBtn =
+            document.getElementById("newChatBtn");
+
+        const chatCounter =
+            document.getElementById("chatCounter");
+
+        const modeButtons =
+            document.querySelectorAll(".mode-btn");
+
+        /* =====================================================
+           4. INITIALIZATION
+        ===================================================== */
+
+        function initializeApp() {
+            modelDisplay.textContent = MODEL_ID;
+
+            loadSavedKey();
+            setMode("auto");
+            updateMessageCounter();
+
+            setTelemetry(
+                "STANDBY",
+                0,
+                "idle"
+            );
+
+            messageInput.focus();
+        }
+
+        /* =====================================================
+           5. API KEY MANAGEMENT
+        ===================================================== */
+
+        function loadSavedKey() {
+            try {
+                const savedKey =
+                    localStorage.getItem(STORAGE_KEY);
+
+                if (savedKey) {
+                    apiKeyInput.value = savedKey;
+                    updateKeyStatus(true);
+                } else {
+                    updateKeyStatus(false);
+                }
+
+            } catch (error) {
+                updateKeyStatus(false);
+
+                showKeyWarning(
+                    "Không thể truy cập localStorage. " +
+                    "Hãy kiểm tra cài đặt quyền lưu trữ của trình duyệt."
+                );
+            }
+        }
+
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+
+            hideKeyWarning();
+
+            if (!key) {
+                showKeyWarning(
+                    "API KEY đang trống. Vui lòng nhập key trước khi lưu."
+                );
+                return;
+            }
+
+            try {
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    key
+                );
+
+                updateKeyStatus(true);
+
+                showKeyWarning(
+                    "API KEY đã được lưu trong trình duyệt."
+                );
+
+                keyWarning.style.color = "#3fb950";
+                keyWarning.style.borderColor =
+                    "rgba(63, 185, 80, 0.4)";
+                keyWarning.style.background =
+                    "rgba(63, 185, 80, 0.06)";
+
+            } catch (error) {
+                updateKeyStatus(false);
+
+                showKeyWarning(
+                    "Không thể lưu API KEY. Trình duyệt có thể đang chặn localStorage."
+                );
+            }
+        }
+
+        function deleteApiKey() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+
+                apiKeyInput.value = "";
+
+                updateKeyStatus(false);
+
+                hideKeyWarning();
+
+                showKeyWarning(
+                    "API KEY đã được xóa khỏi localStorage."
+                );
+
+                keyWarning.style.color = "#3fb950";
+                keyWarning.style.borderColor =
+                    "rgba(63, 185, 80, 0.4)";
+                keyWarning.style.background =
+                    "rgba(63, 185, 80, 0.06)";
+
+            } catch (error) {
+                showKeyWarning(
+                    "Không thể xóa API KEY khỏi localStorage."
+                );
+            }
+        }
+
+        function getApiKey() {
+            return apiKeyInput.value.trim();
+        }
+
+        function updateKeyStatus(isSaved) {
+            if (isSaved) {
+                keyStatus.textContent = "KEY SAVED LOCALLY";
+                keyStatus.style.color = "#3fb950";
+            } else {
+                keyStatus.textContent = "NO KEY SAVED";
+                keyStatus.style.color = "#f85149";
+            }
+        }
+
+        function showKeyWarning(message) {
+            keyWarning.textContent = message;
+            keyWarning.classList.add("visible");
+        }
+
+        function hideKeyWarning() {
+            keyWarning.classList.remove("visible");
+
+            // Trả lại màu cảnh báo mặc định.
+            keyWarning.style.color = "";
+            keyWarning.style.borderColor = "";
+            keyWarning.style.background = "";
+        }
+
+        saveKeyBtn.addEventListener(
+            "click",
+            saveApiKey
+        );
+
+        deleteKeyBtn.addEventListener(
+            "click",
+            deleteApiKey
+        );
+
+        apiKeyInput.addEventListener(
+            "input",
+            hideKeyWarning
+        );
+
+        /* =====================================================
+           6. MODE / PERSONA MANAGEMENT
+        ===================================================== */
+
+        function setMode(mode) {
+            if (!MODES[mode]) {
+                return;
+            }
+
+            currentMode = mode;
+
+            app.classList.remove(
+                "mode-auto",
+                "mode-pro",
+                "mode-hacker"
+            );
+
+            app.classList.add("mode-" + mode);
+
+            modeButtons.forEach(button => {
+                const isActive =
+                    button.dataset.mode === mode;
+
+                button.classList.toggle(
+                    "active",
+                    isActive
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    String(isActive)
+                );
+            });
+
+            activeEngine.textContent =
+                MODES[mode].label;
+
+            chatModeBadge.textContent =
+                MODES[mode].label;
+
+            modeDescription.textContent =
+                MODES[mode].description;
+        }
+
+        modeButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                if (isBusy) return;
+
+                setMode(button.dataset.mode);
+            });
         });
 
-        const data = await res.json();
-        const reply = data.choices?.[0]?.message?.content;
+        /* =====================================================
+           7. SYSTEM PROMPT
+        ===================================================== */
 
-        if (reply) {
-          messages.push({ role: "assistant", content: reply });
-          botUI.tag.textContent = `[${modeName.toUpperCase()}] • Phân tích hoàn tất`;
-          botUI.body.innerHTML = window.marked ? marked.parse(reply) : reply;
-          scanEl.textContent = "Pipeline: COMPLETED";
-        } else {
-          messages.pop();
-          const errMsg = data.error?.message || JSON.stringify(data);
-          botUI.tag.textContent = `[${modeName.toUpperCase()}] • Cảnh báo hệ thống`;
-          botUI.body.innerText = "Lỗi API: " + errMsg;
-          scanEl.textContent = "Pipeline: API_ERROR";
+        function buildSystemPrompt() {
+            const basePrompt = `
+Bạn là TUSIGMA, một trợ lý AI giao tiếp bằng tiếng Việt.
+
+Yêu cầu chung:
+- Trả lời chính xác, rõ ràng, có cấu trúc.
+- Không bịa đặt dữ liệu hoặc nguồn tham khảo.
+- Khi không chắc chắn, hãy nói rõ mức độ không chắc chắn.
+- Dùng Markdown để trình bày nội dung.
+- Với câu hỏi lập trình, cung cấp mã nguồn đầy đủ khi phù hợp.
+- Không tiết lộ API Key hoặc thông tin bí mật.
+`;
+
+            const modePrompts = {
+                auto: `
+PERSONA: AUTO-ROUTER
+
+Tự động lựa chọn cách giải quyết phù hợp với câu hỏi.
+Ưu tiên câu trả lời trực tiếp, đúng trọng tâm và dễ hiểu.
+Với vấn đề phức tạp, hãy chia thành các bước logic.
+`,
+
+                pro: `
+PERSONA: DEEP-SYNTHESIS ENGINE
+
+Bạn là trợ lý phân tích chuyên sâu.
+Ưu tiên:
+- Lập luận logic và có hệ thống.
+- Phân tích nguyên nhân và hệ quả.
+- So sánh ưu nhược điểm khi cần thiết.
+- Đưa ra giải pháp thực tế.
+- Giải thích thuật ngữ chuyên môn chính xác.
+Tránh trả lời hời hợt đối với vấn đề phức tạp.
+`,
+
+                hacker: `
+PERSONA: ROOT-TRACE // OVERRIDE
+
+Bạn có phong cách của một chuyên gia kỹ thuật,
+tập trung vào lập trình, hệ thống máy tính,
+mạng máy tính và an ninh mạng.
+
+Ưu tiên:
+- Giải thích kỹ thuật chính xác.
+- Đọc và phân tích code.
+- Gỡ lỗi và tối ưu chương trình.
+- Phân tích lỗ hổng theo hướng phòng thủ.
+- Hướng dẫn thực hành trong môi trường được phép.
+
+Giữ mọi nội dung an ninh mạng trong phạm vi hợp pháp,
+phòng thủ và môi trường thử nghiệm được cấp phép.
+Không hỗ trợ đánh cắp thông tin đăng nhập,
+phát tán mã độc hoặc xâm nhập hệ thống trái phép.
+Tên persona chỉ thay đổi phong cách trả lời,
+không tạo ra quyền truy cập đặc biệt.
+`
+            };
+
+            return basePrompt + modePrompts[currentMode];
         }
-      } catch (err) {
-        messages.pop();
-        botUI.tag.textContent = `[${modeName.toUpperCase()}] • Lỗi kết nối`;
-        botUI.body.innerText = "Lỗi mạng: " + err.message;
-        scanEl.textContent = "Pipeline: NETWORK_ERROR";
-      } finally {
-        input.disabled = false;
-        btn.disabled = false;
-        input.focus();
-        document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
-      }
-    }
-  </script>
+
+        /* =====================================================
+           8. TELEMETRY
+        ===================================================== */
+
+        function setTelemetry(label, progress, state = "idle") {
+            pipelineStatus.textContent = label;
+
+            progressFill.style.width =
+                Math.max(0, Math.min(100, progress)) + "%";
+
+            pipelineDot.className = "pipeline-dot";
+
+            if (state === "running") {
+                pipelineDot.classList.add("running");
+            }
+
+            if (state === "success") {
+                pipelineDot.classList.add("success");
+            }
+
+            if (state === "error") {
+                pipelineDot.classList.add("error");
+            }
+        }
+
+        /* =====================================================
+           9. MESSAGE RENDERING
+        ===================================================== */
+
+        function clearWelcomeScreen() {
+            if (welcomeScreen && welcomeScreen.parentNode) {
+                welcomeScreen.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            requestAnimationFrame(() => {
+                chatWindow.scrollTop =
+                    chatWindow.scrollHeight;
+            });
+        }
+
+        function createMessageElement(
+            role,
+            content,
+            options = {}
+        ) {
+            clearWelcomeScreen();
+
+            const messageElement =
+                document.createElement("article");
+
+            messageElement.className =
+                "message " + role;
+
+            if (options.processing) {
+                messageElement.classList.add("processing");
+            }
+
+            const meta =
+                document.createElement("div");
+
+            meta.className = "message-meta";
+
+            const roleLabel =
+                document.createElement("span");
+
+            roleLabel.className = "message-role";
+
+            const timeLabel =
+                document.createElement("span");
+
+            const now = new Date();
+
+            timeLabel.textContent =
+                now.toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+            if (role === "user") {
+                roleLabel.textContent = "YOU // USER";
+            } else if (role === "system") {
+                roleLabel.textContent = "SYSTEM // ERROR";
+            } else {
+                roleLabel.textContent =
+                    "TUSIGMA // " + MODES[currentMode].label;
+            }
+
+            meta.appendChild(roleLabel);
+            meta.appendChild(timeLabel);
+
+            const body =
+                document.createElement("div");
+
+            body.className = "message-body";
+
+            if (options.processing) {
+                const processingLine =
+                    document.createElement("div");
+
+                processingLine.className =
+                    "processing-line";
+
+                const spinner =
+                    document.createElement("span");
+
+                spinner.className =
+                    "processing-spinner";
+
+                const processingText =
+                    document.createElement("span");
+
+                processingText.textContent = content;
+
+                processingLine.appendChild(spinner);
+                processingLine.appendChild(processingText);
+
+                body.appendChild(processingLine);
+
+            } else if (role === "bot") {
+                renderMarkdown(body, content);
+
+            } else {
+                // Dùng textContent để không thực thi HTML từ người dùng.
+                body.textContent = content;
+            }
+
+            messageElement.appendChild(meta);
+            messageElement.appendChild(body);
+
+            chatWindow.appendChild(messageElement);
+
+            scrollToBottom();
+
+            return {
+                element: messageElement,
+                body: body
+            };
+        }
+
+        function renderMarkdown(container, content) {
+            const text = String(content ?? "");
+
+            // Fallback an toàn nếu CDN chưa tải được.
+            if (
+                typeof marked === "undefined" ||
+                typeof DOMPurify === "undefined"
+            ) {
+                container.textContent = text;
+                container.style.whiteSpace = "pre-wrap";
+                return;
+            }
+
+            try {
+                const html = marked.parse(text, {
+                    gfm: true,
+                    breaks: true
+                });
+
+                // Không đưa HTML thô trực tiếp từ AI vào DOM.
+                const safeHTML = DOMPurify.sanitize(
+                    html,
+                    {
+                        USE_PROFILES: {
+                            html: true
+                        }
+                    }
+                );
+
+                container.innerHTML = safeHTML;
+
+                // Link Markdown mở tab mới an toàn hơn.
+                container.querySelectorAll("a").forEach(link => {
+                    link.setAttribute("target", "_blank");
+                    link.setAttribute("rel", "noopener noreferrer");
+                });
+
+            } catch (error) {
+                container.textContent = text;
+                container.style.whiteSpace = "pre-wrap";
+            }
+        }
+
+        function updateMessageCounter() {
+            chatCounter.textContent =
+                messages.length + " MESSAGES";
+        }
+
+        /* =====================================================
+           10. SIMULATED ANALYSIS PIPELINE
+        ===================================================== */
+
+        function sleep(ms) {
+            return new Promise(resolve => {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        const PIPELINE_STEPS = [
+            {
+                title: "01 / INPUT ANALYSIS",
+                description:
+                    "Đang phân tích đầu vào và xác định cấu trúc yêu cầu...",
+                progress: 15
+            },
+
+            {
+                title: "02 / CONTEXT SYNTHESIS",
+                description:
+                    "Đang chuẩn bị ngữ cảnh và lịch sử hội thoại...",
+                progress: 35
+            },
+
+            {
+                title: "03 / ENGINE INITIALIZATION",
+                description:
+                    "Đang khởi tạo persona và cấu hình mô hình...",
+                progress: 55
+            },
+
+            {
+                title: "04 / API HANDSHAKE",
+                description:
+                    "Đang hoàn tất pipeline và chuẩn bị kết nối OpenRouter...",
+                progress: 75
+            }
+        ];
+
+        async function runAnalysisPipeline(temporaryMessage) {
+            for (const step of PIPELINE_STEPS) {
+                setTelemetry(
+                    step.title,
+                    step.progress,
+                    "running"
+                );
+
+                const processingLine =
+                    temporaryMessage.body.querySelector(
+                        ".processing-text"
+                    );
+
+                // Cập nhật nội dung thẻ bot tạm thời.
+                const processingText =
+                    temporaryMessage.body.querySelector(
+                        ".processing-line span:last-child"
+                    );
+
+                if (processingText) {
+                    processingText.textContent =
+                        step.description;
+                }
+
+                await sleep(550);
+            }
+        }
+
+        /* =====================================================
+           11. API RESPONSE HELPERS
+        ===================================================== */
+
+        async function readResponseBody(response) {
+            const rawText = await response.text();
+
+            if (!rawText) {
+                return {};
+            }
+
+            try {
+                return JSON.parse(rawText);
+            } catch (error) {
+                return {
+                    error: {
+                        message: rawText.slice(0, 1000)
+                    }
+                };
+            }
+        }
+
+        function extractAssistantContent(content) {
+            if (typeof content === "string") {
+                return content;
+            }
+
+            // Một số API có thể trả nội dung dạng mảng.
+            if (Array.isArray(content)) {
+                return content
+                    .map(part => {
+                        if (typeof part === "string") {
+                            return part;
+                        }
+
+                        if (
+                            part &&
+                            typeof part.text === "string"
+                        ) {
+                            return part.text;
+                        }
+
+                        return "";
+                    })
+                    .filter(Boolean)
+                    .join("\n");
+            }
+
+            return "";
+        }
+
+        /* =====================================================
+           12. OPENROUTER API REQUEST
+        ===================================================== */
+
+        async function callOpenRouter(apiKey) {
+            const controller = new AbortController();
+
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+            }, REQUEST_TIMEOUT);
+
+            try {
+                const requestMessages = [
+                    {
+                        role: "system",
+                        content: buildSystemPrompt()
+                    },
+
+                    ...messages
+                ];
+
+                const response = await fetch(
+                    API_URL,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + apiKey,
+
+                            // Metadata nhận diện ứng dụng.
+                            "HTTP-Referer": window.location.origin,
+                            "X-Title": "TUSIGMA CONSOLE"
+                        },
+
+                        body: JSON.stringify({
+                            model: MODEL_ID,
+                            messages: requestMessages,
+                            temperature: 0.7,
+                            stream: false
+                        }),
+
+                        signal: controller.signal
+                    }
+                );
+
+                const data =
+                    await readResponseBody(response);
+
+                if (!response.ok) {
+                    const apiError =
+                        data?.error?.message ||
+                        data?.message ||
+                        "HTTP " + response.status;
+
+                    throw new Error(
+                        "OpenRouter API Error: " + apiError
+                    );
+                }
+
+                const content =
+                    data?.choices?.[0]?.message?.content;
+
+                const answer =
+                    extractAssistantContent(content);
+
+                if (!answer.trim()) {
+                    throw new Error(
+                        "API trả về phản hồi rỗng hoặc không đúng định dạng."
+                    );
+                }
+
+                return answer;
+
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        /* =====================================================
+           13. MAIN SEND HANDLER
+        ===================================================== */
+
+        async function sendMessage() {
+            if (isBusy) {
+                return;
+            }
+
+            const userText =
+                messageInput.value.trim();
+
+            if (!userText) {
+                return;
+            }
+
+            // Kiểm tra API Key trước khi gửi request.
+            const apiKey = getApiKey();
+
+            if (!apiKey) {
+                setTelemetry(
+                    "API KEY REQUIRED",
+                    0,
+                    "error"
+                );
+
+                showKeyWarning(
+                    "CHƯA CÓ API KEY! Hãy nhập và lưu OpenRouter API Key trước khi gửi tin nhắn. Request chưa được gửi."
+                );
+
+                apiKeyInput.focus();
+
+                createMessageElement(
+                    "system",
+                    "Không thể gửi tin nhắn: chưa cấu hình API Key OpenRouter."
+                );
+
+                return;
+            }
+
+            hideKeyWarning();
+
+            isBusy = true;
+
+            updateBusyState();
+
+            const userMessage = {
+                role: "user",
+                content: userText
+            };
+
+            // Thêm tin nhắn user vào history.
+            messages.push(userMessage);
+
+            updateMessageCounter();
+
+            // Render tin nhắn user.
+            const userElement =
+                createMessageElement(
+                    "user",
+                    userText
+                );
+
+            // Tạo thẻ bot tạm thời.
+            const temporaryMessage =
+                createMessageElement(
+                    "bot",
+                    "Đang khởi tạo...",
+                    {
+                        processing: true
+                    }
+                );
+
+            messageInput.value = "";
+
+            try {
+                // BƯỚC 1: MÔ PHỎNG PHÂN TÍCH 4 GIAI ĐOẠN.
+                await runAnalysisPipeline(
+                    temporaryMessage
+                );
+
+                // BƯỚC 2: GỌI API THẬT.
+                setTelemetry(
+                    "OPENROUTER REQUEST",
+                    85,
+                    "running"
+                );
+
+                const processingText =
+                    temporaryMessage.body.querySelector(
+                        ".processing-line span:last-child"
+                    );
+
+                if (processingText) {
+                    processingText.textContent =
+                        "Đang chờ phản hồi từ OpenRouter...";
+                }
+
+                const answer =
+                    await callOpenRouter(apiKey);
+
+                // BƯỚC 3: GHI PHẢN HỒI VÀO HISTORY.
+                messages.push({
+                    role: "assistant",
+                    content: answer
+                });
+
+                updateMessageCounter();
+
+                // BƯỚC 4: THAY THẾ THẺ BOT TẠM BẰNG KẾT QUẢ THẬT.
+                temporaryMessage.element.classList.remove(
+                    "processing"
+                );
+
+                renderMarkdown(
+                    temporaryMessage.body,
+                    answer
+                );
+
+                // Cập nhật nhãn thời gian phản hồi.
+                const roleLabel =
+                    temporaryMessage.element.querySelector(
+                        ".message-role"
+                    );
+
+                if (roleLabel) {
+                    roleLabel.textContent =
+                        "TUSIGMA // " + MODES[currentMode].label;
+                }
+
+                setTelemetry(
+                    "RESPONSE COMPLETED",
+                    100,
+                    "success"
+                );
+
+                scrollToBottom();
+
+            } catch (error) {
+                // ROLLBACK:
+                // Xóa user message vừa thêm khỏi history.
+                const failedIndex =
+                    messages.indexOf(userMessage);
+
+                if (failedIndex !== -1) {
+                    messages.splice(failedIndex, 1);
+                }
+
+                // Gỡ tin nhắn user vừa hiển thị.
+                userElement.element.remove();
+
+                // Gỡ thẻ bot đang xử lý.
+                temporaryMessage.element.remove();
+
+                updateMessageCounter();
+
+                let errorMessage =
+                    error?.message || "Lỗi không xác định.";
+
+                if (error?.name === "AbortError") {
+                    errorMessage =
+                        "Request đã vượt quá thời gian chờ " +
+                        REQUEST_TIMEOUT / 1000 +
+                        " giây.";
+                } else if (
+                    error instanceof TypeError
+                ) {
+                    errorMessage =
+                        "Không thể kết nối OpenRouter. " +
+                        "Kiểm tra Internet, CORS hoặc kết nối tới API.";
+                }
+
+                // Không hiển thị API Key trong thông báo lỗi.
+                createMessageElement(
+                    "system",
+                    "REQUEST FAILED\n\n" +
+                    errorMessage +
+                    "\n\nTin nhắn vừa gửi đã được rollback khỏi lịch sử hội thoại. Hãy thử lại sau."
+                );
+
+                setTelemetry(
+                    "REQUEST FAILED",
+                    0,
+                    "error"
+                );
+
+            } finally {
+                isBusy = false;
+
+                updateBusyState();
+
+                updateMessageCounter();
+
+                scrollToBottom();
+            }
+        }
+
+        /* =====================================================
+           14. BUSY STATE
+        ===================================================== */
+
+        function updateBusyState() {
+            messageInput.disabled = isBusy;
+            sendBtn.disabled = isBusy;
+            newChatBtn.disabled = isBusy;
+
+            modeButtons.forEach(button => {
+                button.disabled = isBusy;
+            });
+
+            if (isBusy) {
+                sendBtn.textContent = "WAIT...";
+            } else {
+                sendBtn.textContent = "GỬI ↗";
+            }
+
+            if (!isBusy) {
+                messageInput.focus();
+            }
+        }
+
+        /* =====================================================
+           15. NEW CONVERSATION
+        ===================================================== */
+
+        function newConversation() {
+            if (isBusy) {
+                return;
+            }
+
+            messages = [];
+
+            chatWindow.innerHTML = `
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-logo">T_</div>
+
+                    <div class="welcome-title">
+                        NEW SESSION INITIALIZED
+                    </div>
+
+                    <div class="welcome-description">
+                        Lịch sử hội thoại đã được xóa.<br>
+                        Phiên chat mới đã sẵn sàng.
+                    </div>
+                </div>
+            `;
+
+            setTelemetry(
+                "NEW SESSION READY",
+                0,
+                "success"
+            );
+
+            updateMessageCounter();
+
+            messageInput.value = "";
+            messageInput.focus();
+        }
+
+        /* =====================================================
+           16. EVENT LISTENERS
+        ===================================================== */
+
+        sendBtn.addEventListener(
+            "click",
+            sendMessage
+        );
+
+        messageInput.addEventListener(
+            "keydown",
+            event => {
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+                    event.preventDefault();
+
+                    sendMessage();
+                }
+            }
+        );
+
+        newChatBtn.addEventListener(
+            "click",
+            newConversation
+        );
+
+        /* =====================================================
+           17. START APPLICATION
+        ===================================================== */
+
+        initializeApp();
+
+    </script>
 </body>
 </html>
